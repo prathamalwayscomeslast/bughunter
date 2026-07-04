@@ -9,3 +9,7 @@ def health():
 @app.post("/webhook")
 async def webhook():
     return {"received": True}
+
+@app.get("/hetal")
+async def hetal():
+    return {"hetal": "hiii"}
