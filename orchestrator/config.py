@@ -4,4 +4,5 @@ from dotenv import load_dotenv
 load_dotenv()
 
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "")
-GITHUB_TEST_TOKEN = os.getenv("GITHUB_TEST_TOKEN", "")
+GITHUB_APP_ID = os.getenv("GITHUB_APP_ID", "")
+GITHUB_PRIVATE_KEY_PATH = os.getenv("GITHUB_PRIVATE_KEY_PATH", "")

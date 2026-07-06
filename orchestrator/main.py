@@ -1,7 +1,13 @@
 import json
+import logging
+
 from fastapi import FastAPI, Request, HTTPException
+from util.logging import setup_logging
 from vcs.webhook import verify_github_signature, is_bug_labeled_event
 from vcs.client import comment_on_issue
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -21,14 +27,19 @@ async def webhook(request: Request):
     payload = json.loads(raw_body.decode("utf-8"))
 
     if is_bug_labeled_event(event_type, payload):
-        issue = payload["issue"]
-        repo_full_name = payload["repository"]["full_name"]
+        try:
+            installation_id = payload["installation"]["id"]
+            issue = payload["issue"]
+            repo_full_name = payload["repository"]["full_name"]
 
-        comment_on_issue(
-            repo_full_name=repo_full_name,
-            issue_number=issue["number"],
-            message="BugHunter picked up this issue and is preparing to reproduce it!"
-        )
+            comment_on_issue(
+                installation_id=installation_id,
+                repo_full_name=repo_full_name,
+                issue_number=issue["number"],
+                message="BugHunter picked up this issue and is preparing to reproduce it!"
+            )
+        except Exception as e:
+            logger.exception("GitHub App comment failed: %s", e)
 
     return {"received": True}
 
