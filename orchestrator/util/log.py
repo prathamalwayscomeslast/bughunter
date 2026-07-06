@@ -15,14 +15,7 @@ LOGGING_CONFIG = {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "default",
-        },
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "logs/app.log",
-            "maxBytes": 10_000_000,
-            "backupCount": 5,
-            "formatter": "default",
-        },
+        }
     },
 
     "root": {
