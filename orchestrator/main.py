@@ -1,7 +1,7 @@
 import json
 from fastapi import FastAPI, Request, HTTPException
-from github.webhook import verify_github_signature, is_bug_labeled_event
-from github.client import comment_on_issue
+from vcs.webhook import verify_github_signature, is_bug_labeled_event
+from vcs.client import comment_on_issue
 
 app = FastAPI()
 

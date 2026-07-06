@@ -1,6 +1,6 @@
 import hmac
 import hashlib
-from orchestrator.config import WEBHOOK_SECRET
+from config import WEBHOOK_SECRET
 
 def verify_github_signature(payload: bytes, signature_header: str | None) -> bool:
     if not signature_header:
