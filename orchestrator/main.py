@@ -1,13 +1,9 @@
-import logging
-
 from fastapi import FastAPI
-
-from util.log import setup_logging
-
-setup_logging()
-logger = logging.getLogger(__name__)
+from routers.webhook_router import router as webhook_router
 
 app = FastAPI()
+
+app.include_router(webhook_router)
 
 @app.get("/healthz")
 def health():
