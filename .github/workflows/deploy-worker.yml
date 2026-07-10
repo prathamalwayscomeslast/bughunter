@@ -1,0 +1,58 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Deploy Worker — triggers on push to master (orchestrator/** changes only).
+# SSHes into the EC2 instance, pulls latest code, reinstalls deps, restarts
+# the systemd service.  Zero-downtime: the ARQ worker drains in-flight jobs
+# before systemd kills the old process (with a WatchdogSec grace period).
+# ─────────────────────────────────────────────────────────────────────────────
+name: Deploy Worker
+
+on:
+  push:
+    branches: ["master"]
+    paths:
+      - "orchestrator/**"
+      - ".github/workflows/deploy-worker.yml"
+  workflow_dispatch:   # allow manual trigger from the Actions tab
+
+jobs:
+  deploy:
+    name: SSH deploy to EC2
+    runs-on: ubuntu-latest
+    # Only deploy after CI passes.
+    needs: []   # wire to ci.yml's job name if you want explicit gating here
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/bughunter_deploy
+          chmod 600 ~/.ssh/bughunter_deploy
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        run: |
+          ssh -i ~/.ssh/bughunter_deploy \
+              -o StrictHostKeyChecking=no \
+              ec2-user@${{ secrets.EC2_HOST }} \
+              'bash -s' <<'ENDSSH'
+            set -euo pipefail
+            echo "=== Pulling latest code ==="
+            cd /opt/bughunter/repo
+            git fetch origin master
+            git reset --hard origin/master
+
+            echo "=== Installing/updating Python deps ==="
+            cd orchestrator
+            python3.11 -m pip install --user -q -r requirements.txt
+
+            echo "=== Restarting worker service ==="
+            sudo systemctl restart bughunter-worker.service
+
+            echo "=== Verifying service is active ==="
+            sleep 3
+            sudo systemctl is-active bughunter-worker.service
+            echo "Deploy complete."
+          ENDSSH

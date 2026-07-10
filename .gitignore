@@ -1,3 +1,30 @@
-*.idea
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Environment
+.env
 *.env
-*.pem*
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+terraform.tfvars
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# GitHub App private key
+*.pem
+
+# IDE
+.idea/
+.vscode/
+*.iml

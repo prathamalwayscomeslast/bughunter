@@ -1,0 +1,88 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Terraform Apply — provisions or updates the EC2 worker infrastructure.
+# Runs ONLY on manual dispatch (workflow_dispatch) so you control when
+# infrastructure changes happen.
+# To tear down: use the same workflow but pass action=destroy.
+# ─────────────────────────────────────────────────────────────────────────────
+name: Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "apply (provision/update) or destroy (tear down)"
+        required: true
+        default: apply
+        type: choice
+        options:
+          - apply
+          - destroy
+      environment:
+        description: "Target environment"
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.action }} (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra/terraform
+
+    env:
+      # Terraform reads TF_VAR_* automatically as variable values.
+      TF_VAR_redis_url:              ${{ secrets.REDIS_URL }}
+      TF_VAR_database_url:           ${{ secrets.DATABASE_URL }}
+      TF_VAR_webhook_secret:         ${{ secrets.WEBHOOK_SECRET }}
+      TF_VAR_github_app_id:          ${{ secrets.GITHUB_APP_ID }}
+      TF_VAR_github_private_key_b64: ${{ secrets.GITHUB_PRIVATE_KEY_B64 }}
+      TF_VAR_ssh_public_key:         ${{ secrets.EC2_SSH_PUBLIC_KEY }}
+      TF_VAR_ssh_allowed_cidr:       ${{ secrets.SSH_ALLOWED_CIDR }}
+      TF_VAR_environment:            ${{ inputs.environment }}
+      TF_VAR_instance_type:          ${{ inputs.environment == 'prod' && 't3.small' || 't3.micro' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: |
+          if [ "${{ inputs.action }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan
+          else
+            terraform plan -out=tfplan
+          fi
+
+      - name: Show Plan Summary
+        run: terraform show -no-color tfplan
+
+      - name: Terraform Apply / Destroy
+        run: terraform ${{ inputs.action }} -auto-approve tfplan
+
+      - name: Output worker IP
+        if: inputs.action == 'apply'
+        run: terraform output worker_public_ip
