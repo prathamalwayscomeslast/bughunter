@@ -33,7 +33,7 @@ async def webhook(request: Request, db: Session = Depends(get_db)):
             payload = IssueLabeledPayload(**payload_dict)
 
             job_service = JobService(db)
-            job_service.handle_bug_issue(
+            await job_service.handle_bug_issue(
                 installation_id=payload.installation.id,
                 repo_full_name=payload.repository.full_name,
                 issue_number=payload.issue.number,
