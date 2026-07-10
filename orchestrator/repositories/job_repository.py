@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from db.models import Job
+from db.models import Job, JobStatus
+
 
 class JobRepository:
     def __init__(self, db: Session):
@@ -19,7 +20,7 @@ class JobRepository:
             issue_number=issue_number,
             issue_title=issue_title,
             issue_body=issue_body,
-            status="received",
+            status=JobStatus.RECEIVED,
         )
         self.db.add(job)
         self.db.commit()
@@ -33,4 +34,19 @@ class JobRepository:
         job = self.get_by_id(job_id)
         if job:
             job.status = status
+            self.db.commit()
+
+    def increment_repair_attempts(self, job_id: str) -> int:
+        """Atomically bump repair_attempts and return the new value."""
+        job = self.get_by_id(job_id)
+        if job:
+            job.repair_attempts = (job.repair_attempts or 0) + 1
+            self.db.commit()
+            return job.repair_attempts
+        return 0
+
+    def set_diagnosis(self, job_id: str, diagnosis: str) -> None:
+        job = self.get_by_id(job_id)
+        if job:
+            job.diagnosis = diagnosis
             self.db.commit()
