@@ -13,7 +13,7 @@ terraform {
   backend "s3" {
     bucket = "bughunter-tfstate"
     key    = "worker/terraform.tfstate"
-    region = "us-east-1"
+    region = "us-east-1d"
     encrypt = true
   }
 }
