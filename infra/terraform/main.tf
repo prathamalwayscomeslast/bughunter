@@ -59,7 +59,7 @@ data "aws_subnets" "default" {
 # ──────────────────────────────────────────────
 resource "aws_security_group" "worker" {
   name        = "bughunter-worker-sg"
-  description = "BugHunter ARQ worker — inbound SSH only"
+  description = "BugHunter ARQ worker - inbound SSH only"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {

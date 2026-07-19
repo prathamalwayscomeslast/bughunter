@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 MAX_REPAIR_ATTEMPTS = 5
 
-
 async def process_bug_job(ctx, job_id: str):
     """
     Main agentic pipeline.  Status transitions mirror the lifecycle defined in
