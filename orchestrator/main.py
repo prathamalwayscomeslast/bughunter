@@ -36,3 +36,7 @@ app.include_router(webhook_router)
 @app.get("/healthz")
 def health():
     return {"status": "ok"}
+
+@app.get("/hetal")
+def hetal():
+    return {"Hetii: hiii"}

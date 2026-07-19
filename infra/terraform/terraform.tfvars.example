@@ -4,8 +4,8 @@
 aws_region        = "us-east-1"
 environment       = "dev"
 instance_type     = "t3.micro"
-ssh_allowed_cidr  = "YOUR_HOME_IP/32"
-ssh_public_key    = "ssh-ed25519 AAAA... your-email@example.com"
+ssh_allowed_cidr  = ""
+ssh_public_key    = ""
 
 # Secrets — these are passed as TF_VAR_* env vars in CI, not stored here.
 # redis_url              = ""
