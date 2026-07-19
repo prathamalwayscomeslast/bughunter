@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2154   # Variables are injected by Terraform templatefile()
 # Runs once on first boot as root.
 # Bootstraps the BugHunter ARQ worker on Amazon Linux 2023.
 set -euo pipefail
@@ -20,7 +21,7 @@ chmod 600 /opt/bughunter/bughunter.private-key.pem
 chown ec2-user:ec2-user /opt/bughunter/bughunter.private-key.pem
 
 # ── Environment file read by the systemd service ─────────────────────────────
-cat > /opt/bughunter/.env <<'ENVEOF'
+cat > /opt/bughunter/.env <<ENVEOF
 REDIS_URL=${redis_url}
 DATABASE_URL=${database_url}
 WEBHOOK_SECRET=${webhook_secret}
