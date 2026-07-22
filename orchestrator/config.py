@@ -1,16 +1,20 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+BASE_DIR = Path(__file__).resolve().parent
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",
     )
 
     webhook_secret: str
     github_app_id: str
     github_private_key_path: str
+    github_webhook_enabled: bool
     database_url: str
     redis_url: str
 
