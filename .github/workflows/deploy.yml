@@ -52,7 +52,6 @@ jobs:
             --instance-ids "$INSTANCE_ID" \
             --comment "Deploy BugHunter Worker" \
             --parameters commands='[
-              "sudo -u ec2-user git config --global --add safe.directory /opt/bughunter/repo",
               "sudo -u ec2-user bash -lc \"cd /opt/bughunter/repo && git fetch origin && git reset --hard origin/master\"",
               "sudo systemctl daemon-reload",
               "sudo systemctl restart bughunter-worker.service",
