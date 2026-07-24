@@ -29,6 +29,16 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      # i hate ts shit
+      - name: Debug
+        run: |
+          aws sts get-caller-identity
+          aws configure list
+          aws ec2 describe-instances \
+            --filters "Name=instance-state-name,Values=running" \
+            --query "Reservations[].Instances[].Tags"
+          aws ssm describe-instance-information
+
       - name: Restart Worker
         run: |
           aws ssm send-command \
