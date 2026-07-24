@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     webhook_secret: str
     github_app_id: str
     github_private_key_path: str
-    github_webhook_enabled: bool
+    github_webhook_enabled: bool = True
     database_url: str
     redis_url: str
 
