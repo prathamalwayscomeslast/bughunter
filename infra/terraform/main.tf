@@ -11,9 +11,9 @@ terraform {
   # Remote state in S3 so both you and CI share the same state file.
   # Create the bucket once manually before running `terraform init`.
   backend "s3" {
-    bucket = "bughunter-tfstate"
-    key    = "worker/terraform.tfstate"
-    region = "us-east-1"
+    bucket  = "bughunter-tfstate"
+    key     = "worker/terraform.tfstate"
+    region  = "us-east-1"
     encrypt = true
   }
 }
