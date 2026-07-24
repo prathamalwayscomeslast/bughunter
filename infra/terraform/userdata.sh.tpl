@@ -16,7 +16,9 @@ mkdir -p /opt/bughunter
 chown ec2-user:ec2-user /opt/bughunter
 
 # Decode and write the GitHub App private key
-echo "${github_private_key_b64}" | base64 -d > /opt/bughunter/bughunter.private-key.pem
+cat > /opt/bughunter/bughunter.private-key.pem <<'EOF'
+${github_private_key}
+EOF
 chmod 600 /opt/bughunter/bughunter.private-key.pem
 chown ec2-user:ec2-user /opt/bughunter/bughunter.private-key.pem
 

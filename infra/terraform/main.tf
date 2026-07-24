@@ -133,7 +133,7 @@ resource "aws_instance" "worker" {
     database_url           = var.database_url
     webhook_secret         = var.webhook_secret
     github_app_id          = var.github_app_id
-    github_private_key_b64 = var.github_private_key_b64
+    github_private_key     = var.github_private_key
   })
 
   tags = {

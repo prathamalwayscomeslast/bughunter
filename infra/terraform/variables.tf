@@ -52,8 +52,8 @@ variable "github_app_id" {
   sensitive   = true
 }
 
-variable "github_private_key_b64" {
-  description = "Base64-encoded contents of the GitHub App private key .pem file"
+variable "github_private_key" {
+  description = "Contents of the GitHub App private key .pem file"
   type        = string
   sensitive   = true
 }
