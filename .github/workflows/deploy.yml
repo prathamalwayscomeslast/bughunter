@@ -36,7 +36,7 @@ jobs:
                 "Key=tag:Component,Values=worker" \
             --comment "Deploy BugHunter Worker" \
             --parameters commands='[
-              "cd /home/ubuntu/bughunter",
+              "cd /opt/bughunter/repo",
               "git fetch origin",
               "git reset --hard origin/master",
               "sudo systemctl daemon-reload",
