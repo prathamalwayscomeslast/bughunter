@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  render:
+    name: Deploy Render
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+  worker:
+    name: Deploy Worker
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Restart Worker
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets \
+                "Key=tag:Project,Values=bughunter" \
+                "Key=tag:Component,Values=worker" \
+            --comment "Deploy BugHunter Worker" \
+            --parameters commands='[
+              "cd /home/ubuntu/bughunter",
+              "git fetch origin",
+              "git reset --hard origin/master",
+              "sudo systemctl daemon-reload",
+              "sudo systemctl restart bughunter-worker.service",
+              "sudo systemctl status bughunter-worker.service --no-pager"
+            ]'

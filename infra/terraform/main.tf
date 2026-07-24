@@ -146,6 +146,8 @@ resource "aws_instance" "worker" {
 
   tags = {
     Name        = "bughunter-worker"
+    Project     = "bughunter"
+    Component   = "worker"
     Environment = var.environment
     ManagedBy   = "terraform"
   }
