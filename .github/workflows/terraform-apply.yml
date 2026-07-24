@@ -26,13 +26,23 @@ on:
           - dev
           - prod
 
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-${{ inputs.environment }}
+  cancel-in-progress: false
+
 jobs:
   terraform:
     name: Terraform ${{ inputs.action }} (${{ inputs.environment }})
     runs-on: ubuntu-latest
 
+    environment: ${{ inputs.environment }}
+
     defaults:
       run:
+        shell: bash
         working-directory: infra/terraform
 
     env:
@@ -42,10 +52,14 @@ jobs:
       TF_VAR_webhook_secret:         ${{ secrets.WEBHOOK_SECRET }}
       TF_VAR_github_app_id:          ${{ secrets.GITHUB_APP_ID }}
       TF_VAR_github_private_key_b64: ${{ secrets.GITHUB_PRIVATE_KEY_B64 }}
+
       TF_VAR_ssh_public_key:         ${{ secrets.EC2_SSH_PUBLIC_KEY }}
       TF_VAR_ssh_allowed_cidr:       ${{ secrets.SSH_ALLOWED_CIDR }}
+
       TF_VAR_environment:            ${{ inputs.environment }}
       TF_VAR_instance_type:          ${{ inputs.environment == 'prod' && 't3.small' || 't3.micro' }}
+
+      TF_IN_AUTOMATION: true
 
     steps:
       - name: Checkout
@@ -56,15 +70,25 @@ jobs:
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            us-east-1
+          aws-region:            ${{ secrets.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.9"
 
+      - name: Cache Terraform Providers
+        uses: actions/cache@v4
+        with:
+          path: |
+            "~/.terraform.d/plugin-cache"
+          key: terraform-${{ runner.os }}
+
       - name: Terraform Init
         run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
 
       - name: Terraform Validate
         run: terraform validate
@@ -80,9 +104,22 @@ jobs:
       - name: Show Plan Summary
         run: terraform show -no-color tfplan
 
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-${{ inputs.environment }}
+          path: infra/terraform/tfplan
+          retention-days: 7
+
       - name: Terraform Apply / Destroy
         run: terraform ${{ inputs.action }} -auto-approve tfplan
 
+      - name: Terraform Outputs
+        if: inputs.action == 'apply'
+        run: terraform output
+
       - name: Output worker IP
         if: inputs.action == 'apply'
-        run: terraform output worker_public_ip
+        run: |
+          echo "Worker IP: "
+          terraform output -raw worker_public_ip

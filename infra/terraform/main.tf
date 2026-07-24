@@ -101,9 +101,9 @@ resource "aws_iam_role" "worker" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ssm_readonly" {
+resource "aws_iam_role_policy_attachment" "ssm" {
   role       = aws_iam_role.worker.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_iam_instance_profile" "worker" {
