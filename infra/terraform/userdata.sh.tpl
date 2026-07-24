@@ -33,10 +33,14 @@ ENVEOF
 chmod 600 /opt/bughunter/.env
 chown ec2-user:ec2-user /opt/bughunter/.env
 
+# Mark repo path as safe for all users on this instance
+git config --system --add safe.directory /opt/bughunter/repo
+
 # ── Clone repo & install deps ─────────────────────────────────────────────────
 # The deploy workflow will handle subsequent updates via SSH + git pull.
 # This first run just gets the service up for the very first boot.
 sudo -u ec2-user bash <<'SETUP'
+  set -euo pipefail
   cd /opt/bughunter
   git clone https://github.com/prathamalwayscomeslast/bughunter.git repo
   cd repo/orchestrator
