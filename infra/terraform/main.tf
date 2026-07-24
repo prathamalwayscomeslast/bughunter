@@ -129,11 +129,11 @@ resource "aws_instance" "worker" {
 
   # Bootstrap: install Python 3.11, Docker, Git, then set up the systemd service.
   user_data = templatefile("${path.module}/userdata.sh.tpl", {
-    redis_url              = var.redis_url
-    database_url           = var.database_url
-    webhook_secret         = var.webhook_secret
-    github_app_id          = var.github_app_id
-    github_private_key     = var.github_private_key
+    redis_url          = var.redis_url
+    database_url       = var.database_url
+    webhook_secret     = var.webhook_secret
+    github_app_id      = var.github_app_id
+    github_private_key = var.github_private_key
   })
 
   tags = {
