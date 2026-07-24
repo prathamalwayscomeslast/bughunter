@@ -50,11 +50,10 @@ jobs:
       TF_VAR_redis_url:              ${{ secrets.REDIS_URL }}
       TF_VAR_database_url:           ${{ secrets.DATABASE_URL }}
       TF_VAR_webhook_secret:         ${{ secrets.WEBHOOK_SECRET }}
-      TF_VAR_github_app_id:          ${{ secrets.GITHUB_APP_ID }}
-      TF_VAR_github_private_key_b64: ${{ secrets.GITHUB_PRIVATE_KEY_B64 }}
+      TF_VAR_github_app_id:          ${{ secrets.GHUB_APP_ID }}
+      TF_VAR_github_private_key_b64: ${{ secrets.GHUB_PRIVATE_KEY_B64 }}
 
       TF_VAR_ssh_public_key:         ${{ secrets.EC2_SSH_PUBLIC_KEY }}
-      TF_VAR_ssh_allowed_cidr:       ${{ secrets.SSH_ALLOWED_CIDR }}
 
       TF_VAR_environment:            ${{ inputs.environment }}
       TF_VAR_instance_type:          ${{ inputs.environment == 'prod' && 't3.small' || 't3.micro' }}

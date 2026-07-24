@@ -19,6 +19,7 @@ variable "instance_type" {
 variable "ssh_allowed_cidr" {
   description = "CIDR block allowed to SSH into the worker (e.g. your home IP: \"1.2.3.4/32\")"
   type        = string
+  default = null
 }
 
 variable "ssh_public_key" {
