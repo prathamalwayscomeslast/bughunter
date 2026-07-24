@@ -111,7 +111,12 @@ jobs:
           retention-days: 7
 
       - name: Terraform Apply / Destroy
-        run: terraform ${{ inputs.action }} -auto-approve tfplan
+        run: |
+          if [ "${{ inputs.action }}" = "destroy" ]; then
+            terraform destroy -auto-approve
+          else
+            terraform ${{ inputs.action }} -auto-approve tfplan
+          fi
 
       - name: Terraform Outputs
         if: inputs.action == 'apply'
