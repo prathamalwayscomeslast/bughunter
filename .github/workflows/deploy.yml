@@ -41,9 +41,15 @@ jobs:
 
       - name: Restart Worker
         run: |
+          INSTANCE_ID=$(aws ssm describe-instance-information \
+            --query "InstanceInformationList[?contains(InstanceId, 'i-')].InstanceId | [0]" \
+            --output text)
+          
+          echo "Deploying to: $INSTANCE_ID"
+          
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
-            --targets '[{"Key":"tag:Project","Values":["bughunter"]},{"Key":"tag:Component","Values":["worker"]}]' \
+            --instance-ids "$INSTANCE_ID" \
             --comment "Deploy BugHunter Worker" \
             --parameters commands='[
               "cd /opt/bughunter/repo",
