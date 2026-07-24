@@ -43,9 +43,7 @@ jobs:
         run: |
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
-            --targets \
-                "Key=tag:Project,Values=bughunter" \
-                "Key=tag:Component,Values=worker" \
+            --targets '[{"Key":"tag:Project","Values":["bughunter"]},{"Key":"tag:Component","Values":["worker"]}]' \
             --comment "Deploy BugHunter Worker" \
             --parameters commands='[
               "cd /opt/bughunter/repo",
