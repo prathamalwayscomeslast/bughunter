@@ -1,32 +1,40 @@
-from pathlib import Path
-from pydantic_settings import BaseSettings, SettingsConfigDict
+"""
+orchestrator/config.py
 
-BASE_DIR = Path(__file__).resolve().parent
+All environment-variable-backed configuration for the orchestrator and
+background worker.  Import individual constants from here — never read
+os.environ directly in business logic.
+"""
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=BASE_DIR / ".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
-    )
+import os
+from dotenv import load_dotenv
 
-    webhook_secret: str
-    github_app_id: str
-    github_private_key_path: str
-    github_webhook_enabled: bool = True
-    database_url: str
-    redis_url: str
+load_dotenv()
 
+# ── GitHub App credentials ────────────────────────────────────────────────
+GITHUB_APP_ID: str = os.environ["GITHUB_APP_ID"]
+GITHUB_PRIVATE_KEY_PATH: str = os.environ["GITHUB_PRIVATE_KEY_PATH"]
+WEBHOOK_SECRET: str = os.environ["WEBHOOK_SECRET"]
 
-# Module-level singleton — imported by the rest of the codebase.
-# If any required env var is missing, this raises a ValidationError at startup
-# (fast-fail) rather than silently returning None somewhere deep in a call.
-settings = Settings()
+# ── Persistence ───────────────────────────────────────────────────────────
+DATABASE_URL: str = os.environ["DATABASE_URL"]
+REDIS_URL: str = os.environ["REDIS_URL"]
 
-# Convenience aliases so existing import sites (config.REDIS_URL, etc.) keep working.
-WEBHOOK_SECRET = settings.webhook_secret
-GITHUB_APP_ID = settings.github_app_id
-GITHUB_PRIVATE_KEY_PATH = settings.github_private_key_path
-DATABASE_URL = settings.database_url
-REDIS_URL = settings.redis_url
+# ── LLM (via litellm — vendor-neutral, see BUGHUNTER_CONTEXT.md §2.1) ────
+# Set LLM_MODEL to any litellm-supported model string, e.g.:
+#   gemini/gemini-2.0-flash  (default — near-free at prototype scale)
+#   gpt-4o
+#   anthropic/claude-3-5-sonnet-20241022
+#   ollama/llama3 (self-hosted)
+LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini/gemini-2.0-flash")
+
+# Provider-specific API keys are read by litellm automatically from the
+# environment using their standard names:
+#   GEMINI_API_KEY      -> Google Gemini
+#   OPENAI_API_KEY      -> OpenAI
+#   ANTHROPIC_API_KEY   -> Anthropic
+#   AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY -> AWS Bedrock
+# No special handling is needed here — litellm picks them up on its own.
+
+# ── Repair loop ──────────────────────────────────────────────────────────
+MAX_REPAIR_ATTEMPTS: int = int(os.getenv("MAX_REPAIR_ATTEMPTS", "5"))
