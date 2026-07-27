@@ -13,7 +13,7 @@ Apply / verify is left intentionally thin here because actual sandbox
 execution (Step 7 / Step 3 from the context doc) is a separate concern that
 will live in the Go executor service once that is built.  For now, patch
 application happens via Python's stdlib `patch` equivalent (unified diff
-applied with difflib + pathlib writes) so the loop can function without the
+applied via patch-ng) so the loop can function without the
 Go service in Phase 2.
 """
 
@@ -27,10 +27,11 @@ from pathlib import Path
 from typing import Optional
 
 import litellm
+import patch_ng as _patch_ng
 
-from config import LLM_MODEL
 from agent.issue_parser import ReproductionPlan
 from agent.localizer import CandidateFile
+from config import LLM_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -164,93 +165,33 @@ def _build_user_message(
 
 def _apply_unified_diff(repo_root: Path, diff_str: str) -> tuple[bool, str]:
     """
-    Apply a unified diff string to the repository on disk.
+    Apply a unified diff string to the repository on disk using patch-ng.
 
     Returns (success: bool, error_message: str).
 
-    This is a pure-Python diff applier for Phase 2.  When the Go sandbox
-    executor is live, diff application will move there and this function will
-    be replaced by an HTTP call to POST /execute.
+    Phase 2 bridge: when the Go sandbox executor is live, this function
+    is replaced by an HTTP call to POST /execute on the Go service.
     """
-    import re as _re
 
-    # Split diff into per-file blocks
-    file_blocks = _re.split(r'^(?=--- )', diff_str, flags=_re.MULTILINE)
-    applied = 0
-    errors = []
+    # patch-ng expects bytes or a file-like object
+    patch_set = _patch_ng.fromstring(diff_str.encode("utf-8"))
+    if not patch_set:
+        return False, "patch-ng could not parse the diff — check unified diff format"
 
-    for block in file_blocks:
-        block = block.strip()
-        if not block or not block.startswith("---"):
-            continue
+    # apply() takes the root directory as a string; returns True on full success
+    success = patch_set.apply(root=str(repo_root))
+    if not success:
+        # patch-ng logs errors internally; surface a generic message
+        return False, (
+            "patch-ng failed to apply one or more hunks. "
+            "The diff may not match the current file state."
+        )
 
-        # Extract target path from +++ line
-        lines = block.splitlines()
-        plus_line = next((l for l in lines if l.startswith("+++ ")), None)
-        if not plus_line:
-            errors.append(f"No +++ line found in block: {block[:80]}")
-            continue
-
-        # Strip b/ prefix if present
-        raw_path = plus_line[4:].strip()
-        if raw_path.startswith("b/"):
-            raw_path = raw_path[2:]
-
-        target = repo_root / raw_path
-        if not target.exists():
-            errors.append(f"Target file does not exist: {raw_path}")
-            continue
-
-        try:
-            original_lines = target.read_text(errors="replace").splitlines(keepends=True)
-        except OSError as e:
-            errors.append(f"Cannot read {raw_path}: {e}")
-            continue
-
-        # Walk through hunks and apply changes
-        patched = list(original_lines)
-        hunk_pattern = _re.compile(r'^@@ -([0-9]+)(?:,([0-9]+))? \+([0-9]+)(?:,([0-9]+))? @@')
-        i = 0
-        offset = 0   # cumulative line offset from previous hunks
-
-        while i < len(lines):
-            m = hunk_pattern.match(lines[i])
-            if not m:
-                i += 1
-                continue
-
-            orig_start = int(m.group(1)) - 1  # 0-indexed
-            hunk_lines = []
-            i += 1
-            while i < len(lines) and not hunk_pattern.match(lines[i]):
-                if lines[i].startswith(("---", "+++")):
-                    i += 1
-                    continue
-                hunk_lines.append(lines[i])
-                i += 1
-
-            # Build the replacement
-            pos = orig_start + offset
-            remove_count = sum(1 for l in hunk_lines if l.startswith("-") or l.startswith(" "))
-            new_content = []
-            for hl in hunk_lines:
-                if hl.startswith("+"):
-                    new_content.append(hl[1:] + ("" if hl[1:].endswith("\n") else "\n"))
-                elif hl.startswith(" "):
-                    new_content.append(hl[1:] + ("" if hl[1:].endswith("\n") else "\n"))
-                # lines starting with "-" are removed
-
-            patched[pos:pos + remove_count] = new_content
-            offset += len(new_content) - remove_count
-
-        target.write_text("".join(patched), encoding="utf-8")
-        applied += 1
-        logger.debug("repair: applied diff to %s", raw_path)
-
-    if errors:
-        return False, "; ".join(errors)
-    if applied == 0:
-        return False, "No hunks applied — diff may be malformed"
+    logger.debug(
+        "repair: patch-ng applied %d file(s) under %s",
+        len(patch_set.items),
+        repo_root,
+    )
     return True, ""
 
 

@@ -53,6 +53,8 @@ jobs:
             --comment "Deploy BugHunter Worker" \
             --parameters commands='[
               "sudo -u ec2-user bash -lc \"cd /opt/bughunter/repo && git fetch origin && git reset --hard origin/master\"",
+              "cd /opt/bughunter/repo/orchestrator",
+              "/opt/bughunter/venv/bin/pip install -r requirements.txt",
               "sudo systemctl daemon-reload",
               "sudo systemctl restart bughunter-worker.service",
               "sudo systemctl status bughunter-worker.service --no-pager"

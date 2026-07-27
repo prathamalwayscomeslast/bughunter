@@ -44,7 +44,9 @@ sudo -u ec2-user bash <<'SETUP'
   cd /opt/bughunter
   git clone https://github.com/prathamalwayscomeslast/bughunter.git repo
   cd repo/orchestrator
-  python3.11 -m pip install --user -r requirements.txt
+  python3.11 -m venv /opt/bughunter/venv
+  /opt/bughunter/venv/bin/pip install --upgrade pip
+  /opt/bughunter/venv/bin/pip install -r requirements.txt
 SETUP
 
 # ── systemd service ───────────────────────────────────────────────────────────
@@ -59,7 +61,7 @@ Type=simple
 User=ec2-user
 WorkingDirectory=/opt/bughunter/repo/orchestrator
 EnvironmentFile=/opt/bughunter/.env
-ExecStart=/usr/bin/env python3.11 -m arq worker.settings.WorkerSettings
+ExecStart=/opt/bughunter/venv/bin/python -m arq worker.settings.WorkerSettings
 Restart=always
 RestartSec=5
 StandardOutput=journal
