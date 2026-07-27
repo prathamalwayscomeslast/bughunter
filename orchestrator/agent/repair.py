@@ -88,7 +88,7 @@ _PATCH_SYSTEM_PROMPT = textwrap.dedent("""\
       3. (Optionally) a history of previous patch attempts that did NOT fix the bug,
          along with the failure output from each attempt.
 
-    Your task is to produce a minimal, correct code patch.
+    Your task is to produce a correct code patch.
 
     Respond ONLY with a valid JSON object matching this exact schema — no markdown,
     no code fences, pure JSON:

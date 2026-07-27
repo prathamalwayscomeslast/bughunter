@@ -89,7 +89,7 @@ def _extract_keywords(plan: ReproductionPlan, issue_title: str) -> list[str]:
         if key not in seen and key not in stop:
             seen.add(key)
             out.append(t)
-    return out[:40]  # cap to avoid absurdly long regex
+    return out[:50]  # cap to avoid absurdly long regex
 
 
 def _walk_source_files(repo_path: Path) -> list[Path]:

@@ -137,5 +137,5 @@ def parse_issue(issue_title: str, issue_body: str) -> ReproductionPlan:
                            "Please respond with valid JSON only, no other text.",
             })
 
-    # unreachable, but keeps type checker happy
+    # unreachable, but keeps type checker happy :p
     raise ValueError("parse_issue: unexpected exit")
