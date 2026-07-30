@@ -50,3 +50,9 @@ class JobRepository:
         if job:
             job.diagnosis = diagnosis
             self.db.commit()
+
+    def set_pr_url(self, job_id: str, pr_url: str) -> None:
+        job = self.get_by_id(job_id)
+        if job:
+            job.pr_url = pr_url
+            self.db.commit()

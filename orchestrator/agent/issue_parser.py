@@ -21,6 +21,7 @@ from typing import Optional
 import litellm
 
 from config import LLM_MODEL
+from util.llm_json import completion_json
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,36 @@ class ReproductionPlan:
     def from_dict(cls, d: dict) -> "ReproductionPlan":
         return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
 
+REPRODUCTION_PLAN_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "summary": {"type": "string"},
+        "steps_to_reproduce": {
+            "type": "array",
+            "items": {"type": "string"}
+        },
+        "expected_behaviour": {"type": "string"},
+        "actual_behaviour": {"type": "string"},
+        "stack_trace": {"type": ["string", "null"]},
+        "environment": {
+            "type": "object",
+            "additionalProperties": {"type": "string"}
+        },
+        "reproducible_from_description": {"type": "boolean"},
+        "not_reproducible_reason": {"type": ["string", "null"]},
+    },
+    "required": [
+        "summary",
+        "steps_to_reproduce",
+        "expected_behaviour",
+        "actual_behaviour",
+        "stack_trace",
+        "environment",
+        "reproducible_from_description",
+        "not_reproducible_reason",
+    ],
+    "additionalProperties": False,
+}
 
 # ---------------------------------------------------------------------------
 # System prompt
@@ -107,35 +138,10 @@ def parse_issue(issue_title: str, issue_body: str) -> ReproductionPlan:
         {"role": "user", "content": user_content},
     ]
 
-    for attempt in range(1, 3):  # allow one retry on malformed JSON
-        logger.debug("parse_issue: LLM call attempt %d model=%s", attempt, LLM_MODEL)
-        response = litellm.completion(
-            model=LLM_MODEL,
-            messages=messages,
-            temperature=0.0,          # deterministic extraction
-            response_format={"type": "json_object"},
-        )
-        raw = response.choices[0].message.content.strip()
-
-        try:
-            data = json.loads(raw)
-            plan = ReproductionPlan.from_dict(data)
-            logger.info("parse_issue: plan extracted — reproducible=%s",
-                        plan.reproducible_from_description)
-            return plan
-        except (json.JSONDecodeError, TypeError) as exc:
-            logger.warning("parse_issue: attempt %d — JSON parse failed: %s", attempt, exc)
-            if attempt == 2:
-                raise ValueError(
-                    f"LLM returned non-JSON after two attempts. Raw output:\n{raw}"
-                ) from exc
-            # Inject the bad response back so the model can self-correct.
-            messages.append({"role": "assistant", "content": raw})
-            messages.append({
-                "role": "user",
-                "content": "Your last response was not valid JSON. "
-                           "Please respond with valid JSON only, no other text.",
-            })
-
-    # unreachable, but keeps type checker happy :p
-    raise ValueError("parse_issue: unexpected exit")
+    data = completion_json(
+        messages=messages,
+        json_schema=REPRODUCTION_PLAN_SCHEMA,
+        temperature=0.0,
+        max_retries=2,
+    )
+    return ReproductionPlan.from_dict(data)

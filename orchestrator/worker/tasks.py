@@ -215,6 +215,7 @@ async def process_bug_job(ctx, job_id: str):
                             result=patch_result,
                             attempt_count=attempt,
                         )
+                        job_repo.set_pr_url(job_id, pr_url)
                     except Exception as exc:
                         logger.exception(
                             "[%s] PR creation failed: %s", job_id, exc

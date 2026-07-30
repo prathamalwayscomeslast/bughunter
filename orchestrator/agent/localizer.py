@@ -32,6 +32,7 @@ import litellm
 
 from config import LLM_MODEL
 from agent.issue_parser import ReproductionPlan
+from util.llm_json import completion_json
 
 logger = logging.getLogger(__name__)
 
@@ -128,19 +129,41 @@ def _keyword_scan(files: list[Path], keywords: list[str],
     candidates.sort(key=lambda c: c.keyword_hits, reverse=True)
     return candidates[:KEYWORD_MATCH_LIMIT]
 
+_RANKED_CANDIDATES_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "candidates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "rationale": {"type": "string"},
+                },
+                "required": ["path", "rationale"],
+                "additionalProperties": False,
+            },
+            "maxItems": MAX_CANDIDATES,
+        }
+    },
+    "required": ["candidates"],
+    "additionalProperties": False,
+}
 
 _RANK_SYSTEM_PROMPT = textwrap.dedent("""\
     You are a senior software engineer doing root-cause analysis.
     Given a bug description and a list of candidate source file snippets,
     identify the 1-5 files most likely to contain the root cause.
 
-    Respond ONLY with a JSON array of objects in this exact schema:
-    [
-      {
-        "path": "<relative file path>",
-        "rationale": "<one sentence explaining why this file is suspect>"
-      }
-    ]
+    Respond ONLY with a valid JSON object in this exact schema:
+    {
+      "candidates": [
+        {
+          "path": "<relative file path>",
+          "rationale": "<one sentence explaining why this file is suspect>"
+        }
+      ]
+    }
 
     - List files in descending order of suspicion.
     - Include at most 5 entries.
@@ -180,28 +203,31 @@ def _llm_rank_candidates(candidates: list[CandidateFile],
         {"role": "user", "content": user_content},
     ]
 
-    response = litellm.completion(
-        model=LLM_MODEL,
-        messages=messages,
-        temperature=0.0,
-        response_format={"type": "json_object"},
-    )
-    raw = response.choices[0].message.content.strip()
-
-    # The model is asked for an array but response_format forces an object;
-    # handle both wrapping patterns gracefully.
     try:
-        parsed = json.loads(raw)
-        if isinstance(parsed, dict):
-            # unwrap common wrappers like {"files": [...]}
-            for v in parsed.values():
-                if isinstance(v, list):
-                    parsed = v
-                    break
-        if not isinstance(parsed, list):
-            parsed = [parsed]
-    except json.JSONDecodeError as exc:
-        logger.warning("localizer: LLM ranking JSON parse failed: %s — using keyword order", exc)
+        data = completion_json(
+            messages=messages,
+            json_schema=_RANKED_CANDIDATES_SCHEMA,
+            temperature=0.0,
+            max_retries=2,
+        )
+    except Exception as exc:
+        logger.warning(
+            "localizer: LLM ranking failed: %s — using keyword order",
+            exc,
+        )
+        return candidates[:MAX_CANDIDATES]
+
+    if not isinstance(data, dict):
+        logger.warning(
+            "localizer: LLM ranking returned non-object response — using keyword order"
+        )
+        return candidates[:MAX_CANDIDATES]
+
+    parsed = data.get("candidates", [])
+    if not isinstance(parsed, list):
+        logger.warning(
+            "localizer: LLM ranking returned non-list candidates — using keyword order"
+        )
         return candidates[:MAX_CANDIDATES]
 
     # Map back to CandidateFile objects, preserving LLM-provided rationale
@@ -212,7 +238,8 @@ def _llm_rank_candidates(candidates: list[CandidateFile],
             continue
         path = entry.get("path", "")
         if path in path_map:
-            path_map[path].rationale = entry.get("rationale")
+            rationale = entry.get("rationale")
+            path_map[path].rationale = rationale if isinstance(rationale, str) else None
             ranked.append(path_map[path])
 
     return ranked if ranked else candidates[:MAX_CANDIDATES]

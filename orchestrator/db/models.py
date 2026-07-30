@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, UTC
-from sqlalchemy import Column, String, Integer, Text, DateTime
+from sqlalchemy import Column, String, Integer, Text, DateTime, JSON
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -32,5 +32,7 @@ class Job(Base):
     repair_attempts = Column(Integer, default=0)
     # Free-text diagnosis written by the worker when the repair loop is exhausted.
     diagnosis = Column(Text, nullable=True)
+    candidate_files = Column(JSON, nullable=True)
+    pr_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))

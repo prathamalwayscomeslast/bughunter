@@ -28,6 +28,7 @@ from typing import Optional
 
 import litellm
 import patch_ng as _patch_ng
+from litellm import JSONSchemaValidationError
 
 from agent.issue_parser import ReproductionPlan
 from agent.localizer import CandidateFile
@@ -80,6 +81,37 @@ class PreviousAttempt:
 # ---------------------------------------------------------------------------
 # System prompts
 # ---------------------------------------------------------------------------
+
+_PATCH_RESULT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "root_cause": {"type": "string"},
+        "patches": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "unified_diff": {"type": "string"},
+                    "explanation": {"type": "string"},
+                },
+                "required": ["path", "unified_diff", "explanation"],
+                "additionalProperties": False,
+            },
+        },
+        "verification_reasoning": {"type": "string"},
+        "confident": {"type": "boolean"},
+        "failure_reason": {"type": ["string", "null"]},
+    },
+    "required": [
+        "root_cause",
+        "patches",
+        "verification_reasoning",
+        "confident",
+        "failure_reason",
+    ],
+    "additionalProperties": False,
+}
 
 _PATCH_SYSTEM_PROMPT = textwrap.dedent("""\
     You are an expert software engineer generating a code fix for a confirmed bug.
@@ -194,6 +226,68 @@ def _apply_unified_diff(repo_root: Path, diff_str: str) -> tuple[bool, str]:
     )
     return True, ""
 
+def _completion_json_with_fallback(messages: list[dict[str, str]]) -> dict:
+    """
+    Try schema-based structured output first. If the current provider/model
+    rejects the params, fall back to prompt-only JSON and parse manually.
+    """
+    raw = ""
+
+    try:
+        response = litellm.completion(
+            model=LLM_MODEL,
+            messages=messages,
+            temperature=0.1,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "patch_result",
+                    "strict": True,
+                    "schema": _PATCH_RESULT_SCHEMA,
+                },
+            },
+        )
+        raw = (response.choices[0].message.content or "").strip()
+        return json.loads(raw)
+
+    except (
+            litellm.UnsupportedParamsError,
+            litellm.BadRequestError,
+    ) as exc:
+        logger.warning(
+            "repair: structured output unsupported for model=%s, falling back to prompt-only JSON: %s",
+            LLM_MODEL,
+            exc,
+        )
+
+    except JSONSchemaValidationError as exc:
+        logger.warning(
+            "repair: schema validation failed for model=%s: %s",
+            LLM_MODEL,
+            exc,
+        )
+        raw = getattr(exc, "raw_response", "") or ""
+        if raw:
+            try:
+                return json.loads(raw)
+            except json.JSONDecodeError:
+                pass
+
+    response = litellm.completion(
+        model=LLM_MODEL,
+        messages=messages + [
+            {
+                "role": "user",
+                "content": (
+                    "Return ONLY a valid JSON object matching the required schema. "
+                    "Do not wrap it in markdown or add explanation."
+                ),
+            }
+        ],
+        temperature=0.1,
+    )
+    raw = (response.choices[0].message.content or "").strip()
+    return json.loads(raw)
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -218,25 +312,38 @@ def generate_patch(
         {"role": "user", "content": user_msg},
     ]
 
-    response = litellm.completion(
-        model=LLM_MODEL,
-        messages=messages,
-        temperature=0.1,
-        response_format={"type": "json_object"},
-    )
-    raw = response.choices[0].message.content.strip()
-
     try:
-        data = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        logger.error("repair: LLM returned non-JSON: %s", exc)
+        data = _completion_json_with_fallback(messages)
+    except (json.JSONDecodeError, ValueError, TypeError) as exc:
+        logger.error("repair: LLM returned invalid JSON: %s", exc)
         return PatchResult(
             confident=False,
-            failure_reason=f"LLM returned non-JSON response: {exc}",
+            failure_reason=f"LLM returned invalid JSON response: {exc}",
+        )
+    except Exception as exc:
+        logger.exception("repair: LLM completion failed: %s", exc)
+        return PatchResult(
+            confident=False,
+            failure_reason=f"LLM completion failed: {exc}",
+        )
+
+    if not isinstance(data, dict):
+        return PatchResult(
+            confident=False,
+            failure_reason="LLM response was not a JSON object",
+        )
+
+    raw_patches = data.get("patches", [])
+    if not isinstance(raw_patches, list):
+        return PatchResult(
+            confident=False,
+            failure_reason="LLM response contained a non-list 'patches' field",
         )
 
     patches = []
-    for p in data.get("patches", []):
+    for p in raw_patches:
+        if not isinstance(p, dict):
+            continue
         patches.append(FilePatch(
             path=p.get("path", ""),
             unified_diff=p.get("unified_diff", ""),
