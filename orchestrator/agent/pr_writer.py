@@ -96,7 +96,7 @@ def open_fix_pr(
         plan: ReproductionPlan,
         result: PatchResult,
         attempt_count: int,
-        base_branch: str = "main",
+        base_branch: str | None = None,
 ) -> str:
     """
     Create a branch, commit the patched files, and open a pull request.
@@ -109,6 +109,8 @@ def open_fix_pr(
     access_token = get_installation_access_token(installation_id)
     gh = Github(access_token)
     gh_repo = gh.get_repo(repo_full_name)
+    if base_branch is None:
+        base_branch = gh_repo.default_branch
 
     branch = _branch_name(issue_number, issue_title)
     logger.info("pr_writer: creating branch '%s' on %s", branch, repo_full_name)

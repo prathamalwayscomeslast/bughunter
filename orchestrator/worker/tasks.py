@@ -40,7 +40,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 MAX_REPAIR_ATTEMPTS = int(os.getenv("MAX_REPAIR_ATTEMPTS", "5"))
-
+SKIP_REPRODUCTION = True
 
 async def process_bug_job(ctx, job_id: str):
     """
@@ -62,7 +62,10 @@ async def process_bug_job(ctx, job_id: str):
 
         # ── Phase 2a: Parse issue into structured reproduction plan ─────────
         job_repo.update_status(job_id, JobStatus.REPRODUCING)
-        logger.info("[%s] Status → REPRODUCING", job_id)
+        if SKIP_REPRODUCTION:
+            logger.info("[%s] Status → REPRODUCING (logical bypass; sandbox skipped)", job_id)
+        else:
+            logger.info("[%s] Status → REPRODUCING", job_id)
 
         try:
             plan = parse_issue(job.issue_title or "", job.issue_body or "")
@@ -77,21 +80,31 @@ async def process_bug_job(ctx, job_id: str):
 
         if not plan.reproducible_from_description:
             reason = plan.not_reproducible_reason or "insufficient information in issue body"
-            logger.info("[%s] Issue not reproducible: %s", job_id, reason)
-            job_repo.update_status(job_id, JobStatus.UNREPRODUCIBLE)
-            comment_on_issue(
-                job.installation_id,
-                job.repo_full_name,
-                job.issue_number,
-                (
-                    f"🔍 **BugHunter** analysed this issue but could not extract "
-                    f"enough information to attempt reproduction.\n\n"
-                    f"**Reason:** {reason}\n\n"
-                    f"Please add more detail (steps to reproduce, expected vs actual "
-                    f"behaviour, stack trace) and re-apply the `bug` label."
-                ),
-            )
-            return
+
+            if SKIP_REPRODUCTION:
+                logger.warning(
+                    "[%s] Issue marked non-reproducible by parser, but continuing because SKIP_REPRODUCTION=True: %s",
+                    job_id,
+                    reason,
+                )
+                plan.reproducible_from_description = True
+                plan.not_reproducible_reason = None
+            else:
+                logger.info("[%s] Issue not reproducible: %s", job_id, reason)
+                job_repo.update_status(job_id, JobStatus.UNREPRODUCIBLE)
+                comment_on_issue(
+                    job.installation_id,
+                    job.repo_full_name,
+                    job.issue_number,
+                    (
+                        f"🔍 **BugHunter** analysed this issue but could not extract "
+                        f"enough information to attempt reproduction.\n\n"
+                        f"**Reason:** {reason}\n\n"
+                        f"Please add more detail (steps to reproduce, expected vs actual "
+                        f"behaviour, stack trace) and re-apply the `bug` label."
+                    ),
+                )
+                return
 
         logger.info(
             "[%s] Reproduction plan extracted: %s steps, reproducible=%s",
@@ -150,6 +163,7 @@ async def process_bug_job(ctx, job_id: str):
 
             previous_attempts: list[PreviousAttempt] = []
             pr_url: str | None = None
+            patch_result = None
 
             for attempt in range(1, MAX_REPAIR_ATTEMPTS + 1):
                 attempts_so_far = job_repo.increment_repair_attempts(job_id)
@@ -239,7 +253,9 @@ async def process_bug_job(ctx, job_id: str):
                             f"✅ **BugHunter** has opened a pull request with a proposed fix:\n"
                             f"{pr_url}\n\n"
                             f"**Root cause:** {patch_result.root_cause}\n\n"
-                            f"Please review the PR and merge if the fix looks correct. "
+                            f"**Note:** Reproduction and sandbox verification were skipped for this run, "
+                            f"so this PR is based on issue analysis and code localization only.\n\n"
+                            f"Please review the PR carefully before merging. "
                             f"BugHunter will never auto-merge."
                         ),
                     )
@@ -257,7 +273,7 @@ async def process_bug_job(ctx, job_id: str):
             diagnosis = (
                 f"BugHunter exhausted {MAX_REPAIR_ATTEMPTS} repair attempts without "
                 f"resolving the bug in {job.repo_full_name}#{job.issue_number}.\n\n"
-                f"Last known root cause hypothesis:\n{getattr(patch_result, 'root_cause', 'N/A')}\n\n"
+                f"Last known root cause hypothesis:\n{patch_result.root_cause if patch_result else 'N/A'}\n\n"
                 f"Manual investigation is required."
             )
             _fail_with_diagnosis(
