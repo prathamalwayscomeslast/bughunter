@@ -15,6 +15,7 @@ load_dotenv()
 GITHUB_APP_ID: str = os.environ["GITHUB_APP_ID"]
 GITHUB_PRIVATE_KEY_PATH: str = os.environ["GITHUB_PRIVATE_KEY_PATH"]
 WEBHOOK_SECRET: str = os.environ["WEBHOOK_SECRET"]
+GITHUB_WEBHOOK_ENABLED: str = os.environ["GITHUB_WEBHOOK_ENABLED"]
 
 # ── Persistence ───────────────────────────────────────────────────────────
 DATABASE_URL: str = os.environ["DATABASE_URL"]
@@ -26,7 +27,7 @@ REDIS_URL: str = os.environ["REDIS_URL"]
 #   gpt-4o
 #   anthropic/claude-3-5-sonnet-20241022
 #   ollama/llama3 (self-hosted)
-LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini/gemini-2.0-flash")
+LLM_MODEL: str = os.getenv("LLM_MODEL", "gemini/gemini-3.6-flash")
 
 # Provider-specific API keys are read by litellm automatically from the
 # environment using their standard names:
