@@ -80,7 +80,7 @@ def _build_pr_body(
         > 🤖 This PR was opened automatically by **BugHunter** after {attempt_count}
         > repair attempt(s).  A human must review and merge — BugHunter never
         > auto-merges (see [design principles](https://github.com/prathamalwayscomeslast/bughunter/blob/main/BUGHUNTER_CONTEXT.md#23-human-approval-gate)).
-    """)
+    """).strip()
 
 
 # ---------------------------------------------------------------------------
