@@ -29,6 +29,8 @@ DATABASE_URL=${database_url}
 WEBHOOK_SECRET=${webhook_secret}
 GITHUB_APP_ID=${github_app_id}
 GITHUB_PRIVATE_KEY_PATH=/opt/bughunter/bughunter.private-key.pem
+GEMINI_API_KEY=${gemini_api_key}
+LLM_MODEL=${llm_model}
 ENVEOF
 chmod 600 /opt/bughunter/.env
 chown ec2-user:ec2-user /opt/bughunter/.env
