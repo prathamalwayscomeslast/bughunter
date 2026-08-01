@@ -15,7 +15,6 @@ load_dotenv()
 GITHUB_APP_ID: str = os.environ["GITHUB_APP_ID"]
 GITHUB_PRIVATE_KEY_PATH: str = os.environ["GITHUB_PRIVATE_KEY_PATH"]
 WEBHOOK_SECRET: str = os.environ["WEBHOOK_SECRET"]
-GITHUB_WEBHOOK_ENABLED: str = os.environ["GITHUB_WEBHOOK_ENABLED"]
 
 # ── Persistence ───────────────────────────────────────────────────────────
 DATABASE_URL: str = os.environ["DATABASE_URL"]
