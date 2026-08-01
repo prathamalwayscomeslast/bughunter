@@ -57,3 +57,15 @@ variable "github_private_key" {
   type        = string
   sensitive   = true
 }
+
+variable "gemini_api_key" {
+  description = "Gemini API key"
+  type        = string
+  sensitive   = true
+}
+
+variable "llm_model" {
+  description = "LLM model working on the fix"
+  type        = string
+  sensitive   = true
+}

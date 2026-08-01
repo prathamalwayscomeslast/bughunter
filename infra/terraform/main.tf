@@ -134,7 +134,11 @@ resource "aws_instance" "worker" {
     webhook_secret     = var.webhook_secret
     github_app_id      = var.github_app_id
     github_private_key = var.github_private_key
+    gemini_api_key     = var.gemini_api_key
+    llm_model          = var.llm_model
   })
+
+  user_data_replace_on_change = true
 
   tags = {
     Name        = "bughunter-worker"
