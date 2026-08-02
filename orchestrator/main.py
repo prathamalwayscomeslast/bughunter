@@ -6,6 +6,7 @@ from arq.connections import RedisSettings
 from fastapi import FastAPI
 
 from config import REDIS_URL
+from routers import me_router, dashboard_router, repository_router, job_router, issue_router, pull_request_router
 from routers.webhook_router import router as webhook_router
 from util.log import setup_logging
 
@@ -31,6 +32,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(webhook_router)
+app.include_router(me_router)
+app.include_router(dashboard_router)
+app.include_router(repository_router)
+app.include_router(job_router)
+app.include_router(issue_router)
+app.include_router(pull_request_router)
 
 
 @app.get("/healthz")
