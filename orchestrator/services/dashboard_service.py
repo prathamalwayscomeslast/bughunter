@@ -21,7 +21,7 @@ class DashboardService:
     def get_summary(self, *, user_id: str) -> DashboardSummaryResponse:
         return DashboardSummaryResponse(
             total_repositories=self.dashboard_repository.count_repositories(user_id=user_id),
-            active_issues=self.dashboard_repository.count_active_issues(user_id=user_id),
+            open_issues=self.dashboard_repository.count_active_issues(user_id=user_id),
             active_jobs=self.dashboard_repository.count_active_jobs(user_id=user_id),
             open_pull_requests=self.dashboard_repository.count_open_pull_requests(user_id=user_id),
         )
@@ -58,8 +58,8 @@ class DashboardService:
 
         return DashboardResponse(
             summary=summary,
-            repositories=repositories,
-            issues=issues,
-            jobs=jobs,
-            pull_requests=pull_requests,
+            recent_repositories=repositories,
+            recent_issues=issues,
+            recent_jobs=jobs,
+            recent_pull_requests=pull_requests,
         )
