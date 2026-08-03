@@ -42,7 +42,7 @@ app.include_router(pull_request_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://your-prod-domain.com"],
+    allow_origins=["http://localhost:5173", "https://bughunter-frontend-omega.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
