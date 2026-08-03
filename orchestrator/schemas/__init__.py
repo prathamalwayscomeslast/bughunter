@@ -1,15 +1,15 @@
-from orchestrator.schemas.auth import AuthenticatedUser
-from orchestrator.schemas.common import ApiError, PaginatedResponse, PaginationMeta
-from orchestrator.schemas.dashboard import DashboardResponse, DashboardSummaryResponse
-from orchestrator.schemas.issue import IssueListItem, IssuePreviewItem, IssueQueryParams
-from orchestrator.schemas.job import JobDetailResponse, JobListItem, JobPreviewItem, JobQueryParams
-from orchestrator.schemas.me import MeResponse
-from orchestrator.schemas.pull_request import (
+from schemas.auth import AuthenticatedUser
+from schemas.common import ApiError, PaginatedResponse, PaginationMeta
+from schemas.dashboard import DashboardResponse, DashboardSummaryResponse
+from schemas.issue import IssueListItem, IssuePreviewItem, IssueQueryParams
+from schemas.job import JobDetailResponse, JobListItem, JobPreviewItem, JobQueryParams
+from schemas.me import MeResponse
+from schemas.pull_request import (
     PullRequestListItem,
     PullRequestPreviewItem,
     PullRequestQueryParams,
 )
-from orchestrator.schemas.repository import (
+from schemas.repository import (
     RepositoryListItem,
     RepositoryPreviewItem,
     RepositoryQueryParams,

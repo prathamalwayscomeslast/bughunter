@@ -1,12 +1,12 @@
-from orchestrator.db.base import Base
-from orchestrator.db.enums import (
+from db.base import Base
+from db.enums import (
     JobStatus,
     PullRequestStatus,
     RepositoryVisibility,
     VerificationStatus,
 )
-from orchestrator.db.models import Job, PullRequest, Repository, User, UserRepositoryAccess
-from orchestrator.db.session import SessionLocal, engine, init_db
+from db.models import Job, PullRequest, Repository, User, UserRepositoryAccess
+from db.session import SessionLocal, engine, init_db
 
 __all__ = [
     "Base",
