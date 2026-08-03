@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import REDIS_URL
 from routers import me_router, dashboard_router, repository_router, job_router, issue_router, pull_request_router
@@ -39,6 +40,13 @@ app.include_router(job_router)
 app.include_router(issue_router)
 app.include_router(pull_request_router)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "https://your-prod-domain.com"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/healthz")
 def health():
@@ -46,4 +54,4 @@ def health():
 
 @app.get("/hetal")
 def hetal():
-    return {"Hetii: hiii"}
+    return {"Hetii": "hiii"}

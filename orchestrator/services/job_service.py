@@ -4,7 +4,7 @@ from arq import ArqRedis
 from sqlalchemy.orm import Session
 
 from db.models import JobStatus
-from schemas import PaginatedResponse, IssueListItem, PaginationMeta, JobListItem, JobQueryParams
+from schemas import PaginatedResponse, IssueListItem, PaginationMeta, JobListItem, JobQueryParams, JobDetailResponse
 from util.log import setup_logging
 from repositories.job_repository import JobRepository
 from vcs.client import comment_on_issue
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class JobService:
-    def __init__(self, db: Session, redis: ArqRedis):
+    def __init__(self, db: Session, redis: ArqRedis | None = None):
         """
         redis is the shared ArqRedis pool created once at app startup via the
         FastAPI lifespan and stored on app.state.redis.  It must be passed in
@@ -130,3 +130,16 @@ class JobService:
             ),
         )
 
+    def get_job_detail(
+            self,
+            *,
+            job_id: str,
+            user_id: str,
+    ) -> JobDetailResponse | None:
+        job = self.job_repository.get_accessible_job(
+            job_id=job_id,
+            user_id=user_id,
+        )
+        if job is None:
+            return None
+        return JobDetailResponse.model_validate(job)

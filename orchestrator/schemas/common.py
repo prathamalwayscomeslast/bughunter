@@ -25,7 +25,7 @@ class PaginationMeta(BaseModel):
     has_next: bool
 
 
-class PaginatedResponse(GenericModel, Generic[T]):
+class PaginatedResponse(BaseModel, Generic[T]):
     model_config = ConfigDict(from_attributes=True)
 
     items: list[T]

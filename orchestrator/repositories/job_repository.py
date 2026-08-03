@@ -117,6 +117,29 @@ class JobRepository:
         total = self.db.scalar(count_stmt) or 0
         return items, total
 
+    def get_accessible_job(
+            self,
+            *,
+            job_id: str,
+            user_id: str,
+    ) -> Job | None:
+        """
+        Fetch a single job by ID, but only if the requesting user has
+        UserRepositoryAccess to the repository it belongs to.
+        Returns None if the job doesn't exist OR the user can't see it.
+        """
+        stmt = (
+            select(Job)
+            .outerjoin(Repository, Repository.id == Job.repository_id)
+            .join(
+                UserRepositoryAccess,
+                UserRepositoryAccess.repository_id == Repository.id,
+                )
+            .where(Job.id == job_id)
+            .where(UserRepositoryAccess.user_id == user_id)
+        )
+        return self.db.scalars(stmt).first()
+
     def count_accessible_active_jobs(self, *, user_id: str) -> int:
         stmt = (
             select(func.count())
