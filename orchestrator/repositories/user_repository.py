@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from orchestrator.db.models import User
+from db.models import User
 
 
 class UserRepository:

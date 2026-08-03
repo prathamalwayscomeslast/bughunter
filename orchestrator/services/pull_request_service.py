@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from orchestrator.db.enums import PullRequestStatus
-from orchestrator.repositories.pull_request_repository import PullRequestRepository
-from orchestrator.schemas.common import PaginatedResponse, PaginationMeta
-from orchestrator.schemas.pull_request import (
+from db.enums import PullRequestStatus
+from repositories.pull_request_repository import PullRequestRepository
+from schemas.common import PaginatedResponse, PaginationMeta
+from schemas.pull_request import (
     PullRequestListItem,
     PullRequestQueryParams,
 )

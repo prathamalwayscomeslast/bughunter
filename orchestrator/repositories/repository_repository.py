@@ -3,8 +3,8 @@ from __future__ import annotations
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
-from orchestrator.db.enums import RepositoryVisibility
-from orchestrator.db.models import Repository, UserRepositoryAccess
+from db.enums import RepositoryVisibility
+from db.models import Repository, UserRepositoryAccess
 
 
 class RepositoryRepository:

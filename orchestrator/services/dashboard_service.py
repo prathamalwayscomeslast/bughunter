@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from orchestrator.repositories.dashboard_repository import DashboardRepository
-from orchestrator.schemas.dashboard import (
+from repositories.dashboard_repository import DashboardRepository
+from schemas.dashboard import (
     DashboardResponse,
     DashboardSummaryResponse,
 )
-from orchestrator.schemas.issue import IssuePreviewItem
-from orchestrator.schemas.job import JobPreviewItem
-from orchestrator.schemas.pull_request import PullRequestPreviewItem
-from orchestrator.schemas.repository import RepositoryPreviewItem
+from schemas.issue import IssuePreviewItem
+from schemas.job import JobPreviewItem
+from schemas.pull_request import PullRequestPreviewItem
+from schemas.repository import RepositoryPreviewItem
 
 
 class DashboardService:

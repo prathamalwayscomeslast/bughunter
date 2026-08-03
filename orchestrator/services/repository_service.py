@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from orchestrator.db.enums import RepositoryVisibility
-from orchestrator.repositories.repository_repository import RepositoryRepository
-from orchestrator.schemas.common import PaginatedResponse, PaginationMeta
-from orchestrator.schemas.repository import (
+from db.enums import RepositoryVisibility
+from repositories.repository_repository import RepositoryRepository
+from schemas.common import PaginatedResponse, PaginationMeta
+from schemas.repository import (
     RepositoryListItem,
     RepositoryQueryParams,
 )

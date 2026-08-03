@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from orchestrator.schemas.issue import IssuePreviewItem
-from orchestrator.schemas.job import JobPreviewItem
-from orchestrator.schemas.pull_request import PullRequestPreviewItem
-from orchestrator.schemas.repository import RepositoryPreviewItem
+from schemas.issue import IssuePreviewItem
+from schemas.job import JobPreviewItem
+from schemas.pull_request import PullRequestPreviewItem
+from schemas.repository import RepositoryPreviewItem
 
 
 class DashboardSummaryResponse(BaseModel):

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from orchestrator.repositories.user_repository import UserRepository
-from orchestrator.schemas.auth import AuthenticatedUser
-from orchestrator.schemas.me import MeResponse
+from repositories.user_repository import UserRepository
+from schemas.auth import AuthenticatedUser
+from schemas.me import MeResponse
 
 
 class UserService:

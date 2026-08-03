@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi import status
 
-from orchestrator.dependencies.auth import CurrentUser
-from orchestrator.dependencies.db import get_db
-from orchestrator.schemas.common import PaginatedResponse
-from orchestrator.schemas.job import JobListItem, JobQueryParams, JobDetailResponse
-from orchestrator.services.job_service import JobService
-from orchestrator.services.user_service import UserService
+from dependencies.auth import CurrentUser
+from dependencies.db import get_db
+from schemas.common import PaginatedResponse
+from schemas.job import JobListItem, JobQueryParams, JobDetailResponse
+from services.job_service import JobService
+from services.user_service import UserService
 
 router = APIRouter(
     prefix="/jobs",

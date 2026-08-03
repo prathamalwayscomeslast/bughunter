@@ -5,12 +5,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from orchestrator.dependencies.auth import CurrentUser
-from orchestrator.dependencies.db import get_db
-from orchestrator.schemas.common import PaginatedResponse
-from orchestrator.schemas.pull_request import PullRequestListItem, PullRequestQueryParams
-from orchestrator.services.pull_request_service import PullRequestService
-from orchestrator.services.user_service import UserService
+from dependencies.auth import CurrentUser
+from dependencies.db import get_db
+from schemas.common import PaginatedResponse
+from schemas.pull_request import PullRequestListItem, PullRequestQueryParams
+from services.pull_request_service import PullRequestService
+from services.user_service import UserService
 
 router = APIRouter(
     prefix="/pull-requests",

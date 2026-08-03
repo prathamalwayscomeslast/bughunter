@@ -15,8 +15,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from orchestrator.db.base import Base
-from orchestrator.db.enums import (
+from db.base import Base
+from db.enums import (
     JobStatus,
     PullRequestStatus,
     RepositoryVisibility,

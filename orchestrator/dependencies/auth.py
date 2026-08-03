@@ -5,8 +5,8 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from orchestrator.schemas.auth import AuthenticatedUser
-from orchestrator.security.firebase import (
+from schemas.auth import AuthenticatedUser
+from security.firebase import (
     FirebaseTokenVerificationError,
     extract_identity,
     verify_firebase_token,

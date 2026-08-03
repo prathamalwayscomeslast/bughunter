@@ -3,10 +3,10 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from orchestrator.dependencies.auth import CurrentUser
-from orchestrator.dependencies.db import get_db
-from orchestrator.schemas.me import MeResponse
-from orchestrator.services.user_service import UserService
+from dependencies.auth import CurrentUser
+from dependencies.db import get_db
+from schemas.me import MeResponse
+from services.user_service import UserService
 
 router = APIRouter(
     prefix="/me",

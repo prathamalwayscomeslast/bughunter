@@ -3,8 +3,8 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from orchestrator.db.enums import JobStatus, PullRequestStatus
-from orchestrator.db.models import Job, PullRequest, Repository, UserRepositoryAccess
+from db.enums import JobStatus, PullRequestStatus
+from db.models import Job, PullRequest, Repository, UserRepositoryAccess
 
 
 ACTIVE_JOB_STATUSES = (

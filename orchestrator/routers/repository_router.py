@@ -5,12 +5,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from orchestrator.dependencies.auth import CurrentUser
-from orchestrator.dependencies.db import get_db
-from orchestrator.schemas.common import PaginatedResponse
-from orchestrator.schemas.repository import RepositoryListItem, RepositoryQueryParams
-from orchestrator.services.repository_service import RepositoryService
-from orchestrator.services.user_service import UserService
+from dependencies.auth import CurrentUser
+from dependencies.db import get_db
+from schemas.common import PaginatedResponse
+from schemas.repository import RepositoryListItem, RepositoryQueryParams
+from services.repository_service import RepositoryService
+from services.user_service import UserService
 
 router = APIRouter(
     prefix="/repositories",

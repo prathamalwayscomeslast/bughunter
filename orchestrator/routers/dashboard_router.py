@@ -3,11 +3,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from orchestrator.dependencies.auth import CurrentUser
-from orchestrator.dependencies.db import get_db
-from orchestrator.schemas.dashboard import DashboardResponse, DashboardSummaryResponse
-from orchestrator.services.dashboard_service import DashboardService
-from orchestrator.services.user_service import UserService
+from dependencies.auth import CurrentUser
+from dependencies.db import get_db
+from schemas.dashboard import DashboardResponse, DashboardSummaryResponse
+from services.dashboard_service import DashboardService
+from services.user_service import UserService
 
 router = APIRouter(
     prefix="/dashboard",
